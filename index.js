@@ -6,20 +6,27 @@ import express from 'express'
 import cors from "cors";
 import cookieParser from "cookie-parser";
 import { connectDB } from './src/db/connectdb.js';
-import { PORT } from "./src/config/env.js";
+import { JWT_EXPIRES_IN, JWT_SECRET, PORT } from "./src/config/env.js";
 
 
+import authRoutes from './src/routes/auth.route.js';
 
 
 const app = express();
 
-console.log("MONGO_URI:", process.env.MONGO_URI);
+
 connectDB()
 
+// Middlewares
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors())
+
+
+
+// Routes
+app.use('/api/v1/auth', authRoutes);
 
 
 app.listen(PORT || 5000, () => {
