@@ -10,7 +10,7 @@ import { JWT_EXPIRES_IN, JWT_SECRET, PORT } from "./src/config/env.js";
 
 
 import authRoutes from './src/routes/auth.route.js';
-
+import habitRoutes from './src/routes/habit.route.js';
 
 const app = express();
 
@@ -27,6 +27,7 @@ app.use(cors())
 
 // Routes
 app.use('/api/v1/auth', authRoutes);
+app.use('/api/v1/habit', habitRoutes);
 
 
 app.listen(PORT || 5000, () => {
