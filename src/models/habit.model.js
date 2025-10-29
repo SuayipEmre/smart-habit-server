@@ -44,6 +44,16 @@ const habitSchema = new mongoose.Schema(
         },
       },
     ],
+    reminderTime: {
+      type: String, 
+      validate: {
+        validator: function (value) {
+          return /^([01]\d|2[0-3]):([0-5]\d)$/.test(value);
+        },
+        message: "Reminder time must be in HH:MM format (24-hour)",
+      },
+    },
+    
   },
   { timestamps: true }
 );

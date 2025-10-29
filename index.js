@@ -23,6 +23,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors())
 
+import "./src/cron/reminder.cron.js";
 
 
 // Routes

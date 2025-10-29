@@ -7,5 +7,8 @@ export const {
     PORT,
     MONGO_URI,
     JWT_SECRET,
-    JWT_EXPIRES_IN
+    JWT_EXPIRES_IN,
+    EMAIL_SERVICE,
+    EMAIL_USER,
+    EMAIL_PASSWORD
 } = process.env;

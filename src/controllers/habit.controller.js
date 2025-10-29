@@ -8,6 +8,7 @@ export const createHabit = async (req, res, next) => {
             title,
             description,
             frequency,
+            reminderTime, 
         } = req.body;
 
 
@@ -21,6 +22,7 @@ export const createHabit = async (req, res, next) => {
             title,
             description,
             frequency,
+            reminderTime, 
             user: user._id,
         }).save();
 
@@ -61,7 +63,7 @@ export const updateHabits = async (req, res, next) => {
     try {
         const user = req.user
         const { habitId } = req.params;
-        const { title, description, frequency } = req.body;
+        const { title, description, frequency, reminderTime, } = req.body;
 
         if (!habitId) {
             const error = new Error('Habit ID is required');
@@ -80,6 +82,7 @@ export const updateHabits = async (req, res, next) => {
         habit.title = title || habit.title;
         habit.description = description || habit.description;
         habit.frequency = frequency || habit.frequency;
+        habit.reminderTime = reminderTime || habit.reminderTime;
         await habit.save();
         res.status(200).json({
             status: 'success',
@@ -157,7 +160,8 @@ export const completeHabit = async(req, res, next) => {
     let diffDays = 0;
     if (lastDate) {
       const diffTime = today - lastDate;
-      diffDays = diffTime / (1000 * 60 * 60 * 24);
+      diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+
     }
 
     if (habit.frequency === "daily") {
