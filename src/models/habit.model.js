@@ -53,6 +53,10 @@ const habitSchema = new mongoose.Schema(
         message: "Reminder time must be in HH:MM format (24-hour)",
       },
     },
+    isCompletedToday : {
+      type : Boolean,
+      default : false
+    }
     
   },
   { timestamps: true }

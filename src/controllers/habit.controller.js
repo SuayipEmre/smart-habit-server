@@ -8,7 +8,7 @@ export const createHabit = async (req, res, next) => {
             title,
             description,
             frequency,
-            reminderTime, 
+            reminderTime,
         } = req.body;
 
 
@@ -22,7 +22,7 @@ export const createHabit = async (req, res, next) => {
             title,
             description,
             frequency,
-            reminderTime, 
+            reminderTime,
             user: user._id,
         }).save();
 
@@ -33,7 +33,7 @@ export const createHabit = async (req, res, next) => {
                 habit: newHabit,
             }
         })
-        next()
+
     } catch (error) {
         error.status = error.status || 500;
         next(error);
@@ -44,7 +44,8 @@ export const getHabits = async (req, res, next) => {
     try {
         const user = req.user
 
-        const habits = await Habit.find({ user: user._id });
+        const habits = await Habit.find({ user: user._id })
+        .sort({ createdAt: -1, updatedAt: -1 })
 
         res.status(200).json({
             status: 'success',
@@ -53,12 +54,13 @@ export const getHabits = async (req, res, next) => {
                 habits,
             }
         })
-        next()
+
     } catch (error) {
         error.status = error.status || 500;
         next(error);
     }
 }
+
 export const updateHabits = async (req, res, next) => {
     try {
         const user = req.user
@@ -126,71 +128,112 @@ export const deleteHabits = async (req, res, next) => {
     }
 }
 
-export const completeHabit = async(req, res, next) => {
-  try {
-    const user = req.user;
-    const{ habitId } = req.params;
-
-    if(!habitId) {
-        const error = new Error('Habit ID is required');
+export const completeHabit = async (req, res, next) => {
+    try {
+      const user = req.user;
+      const { habitId } = req.params;
+  
+      if (!habitId) {
+        const error = new Error("Habit ID is required");
         error.status = 400;
         return next(error);
-    }
-
-    const habit = await Habit.findOne({_id : habitId, user:user._id});
-
-    if(!habit) {
-        const error = new Error('Habit not found or unauthorized');
+      }
+  
+      const habit = await Habit.findOne({ _id: habitId, user: user._id });
+      if (!habit) {
+        const error = new Error("Habit not found or unauthorized");
         error.status = 404;
         return next(error);
-    }
-    const today = new Date();
-    const lastDate = habit.completedDates.at(-1);
-
-    if(lastDate && lastDate.toDateString() === today.toDateString()) {
-        const error = new Error('Habit already completed for today');
+      }
+  
+      const normalizeUTC = (date) =>
+        new Date(Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()));
+  
+      const today = normalizeUTC(new Date());
+  
+      const lastDateRaw = habit.completedDates.at(-1);
+      const lastDate = lastDateRaw ? normalizeUTC(new Date(lastDateRaw)) : null;
+  
+      if (lastDate && lastDate.getTime() === today.getTime()) {
+        const error = new Error("Habit already completed for today");
         error.status = 400;
         return next(error);
+      }
+  
+      habit.isCompletedToday = true;
+  
+      habit.completedDates.push(today);
+  
+      let diffDays = 0;
+      if (lastDate) {
+        diffDays = Math.round((today - lastDate) / (1000 * 60 * 60 * 24));
+      }
+  
+      if (habit.frequency === "daily") {
+        habit.streak = diffDays === 1 ? habit.streak + 1 : 1;
+      } else if (habit.frequency === "weekly") {
+        habit.streak = diffDays >= 1 && diffDays <= 7 ? habit.streak + 1 : 1;
+      } else if (habit.frequency === "monthly") {
+        habit.streak = diffDays >= 1 && diffDays <= 31 ? habit.streak + 1 : 1;
+      } else {
+        habit.streak = 1;
+      }
+  
+      await habit.save();
+  
+      res.status(200).json({
+        status: "success",
+        message: "Habit marked as complete for today",
+        data: { habit },
+      });
+    } catch (error) {
+      error.status = error.status || 500;
+      next(error);
     }
+  };
+  
+export const getTodayHabits = async (req, res, next) => {
+    try {
+        const user = req.user;
 
-    habit.completedDates.push(today);
+        // 🗓️ Bugünün UTC başlangıcı ve yarının UTC başlangıcı
+        const now = new Date();
+        const todayStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
+        const tomorrowStart = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate() + 1));
 
-    // Update streak
+        // 🔍 Sorgu: sadece daily ve bugün tamamlanmamış alışkanlıklar
+        const todayHabits = await Habit.find({
+            user: user._id,
+            frequency: "daily",
+            $or: [
+                { completedDates: { $exists: false } }, // hiç yapılmamış
+                { completedDates: { $size: 0 } },       // boş liste
+                {
+                    completedDates: {
+                        $not: {
+                            $elemMatch: {
+                                $gte: todayStart,
+                                $lt: tomorrowStart,
+                            },
+                        },
+                    },
+                },
+            ],
+        })
+            .select("title frequency streak completedDates description") // gereksiz alanları getirme
+            .lean(); // Mongoose doküman objesi yerine sade JS objesi döner → performanslı
 
-    let diffDays = 0;
-    if (lastDate) {
-      const diffTime = today - lastDate;
-      diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24));
+        // 🔢 Response
+        res.status(200).json({
+            status: "success",
+            message: "Today's habits fetched successfully",
+            count: todayHabits.length,
+            data: { habits: todayHabits },
+        });
 
+
+    } catch (error) {
+        error.status = error.status || 500;
+        next(error);
     }
-
-    if (habit.frequency === "daily") {
-      if (diffDays === 1) habit.streak += 1;
-      else habit.streak = 1;
-    } else if (habit.frequency === "weekly") {
-      if (diffDays >= 1 && diffDays <= 7) habit.streak += 1;
-      else habit.streak = 1;
-    } else if (habit.frequency === "monthly") {
-      if (diffDays >= 1 && diffDays <= 31) habit.streak += 1;
-      else habit.streak = 1;
-    } else {
-      habit.streak = 1;
-    }
-
-    await habit.save()
-
-    res.status(200).json({
-      status: "success",
-      message: "Habit marked as complete for today",
-      data: {
-        habit,
-      },
-    });
-
-    next()
-
-  } catch (error) {
-    error.status = error.status || 500;
-    next(error);
-  }
-}
+};

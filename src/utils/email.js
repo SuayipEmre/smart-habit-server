@@ -35,7 +35,6 @@ export const sendEmail = async (to, subject, habitTitle, username) => {
           </p>
 
           <p style="font-size: 12px; color: 'blue'; text-align: center;">
-          seni çok seviyorum güzel kızım
         </p>
         </div>
       </div>
