@@ -10,5 +10,8 @@ export const {
     JWT_EXPIRES_IN,
     EMAIL_SERVICE,
     EMAIL_USER,
-    EMAIL_PASSWORD
+    EMAIL_PASSWORD,
+    REFRESH_TOKEN_SECRET,
+    REFRESH_TOKEN_EXPIRES_IN,
+
 } = process.env;

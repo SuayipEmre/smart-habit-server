@@ -12,7 +12,7 @@ const habitSchema = new mongoose.Schema(
     description: {
       type: String,
       trim: true,
-      maxlength: [300, "Description cannot exceed 300 characters"],
+      maxlength: [500, "Description cannot exceed 300 characters"],
     },
     frequency: {
       type: String,

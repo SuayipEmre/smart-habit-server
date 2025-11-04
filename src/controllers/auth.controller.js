@@ -1,7 +1,20 @@
-import { JWT_EXPIRES_IN, JWT_SECRET } from "../config/env.js";
+import { JWT_EXPIRES_IN, JWT_SECRET, REFRESH_TOKEN_EXPIRES_IN, REFRESH_TOKEN_SECRET } from "../config/env.js";
 import User from "../models/user.model.js";
 import bcrypt from 'bcryptjs'
 import jwt from 'jsonwebtoken'
+import { sendResponse } from "../utils/sendResponse.js";
+
+
+
+const generateAccessToken = (user) =>
+    jwt.sign({ userId: user._id, email: user.email }, JWT_SECRET, {
+        expiresIn: JWT_EXPIRES_IN,
+    })
+
+const generateRefreshToken = (user) =>
+    jwt.sign({ userId: user._id }, REFRESH_TOKEN_SECRET, {
+        expiresIn: REFRESH_TOKEN_EXPIRES_IN,
+    })
 
 
 export const signUp = async (req, res, next) => {
@@ -34,30 +47,31 @@ export const signUp = async (req, res, next) => {
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt)
 
-        const newUser = await new User({
+        const newUser = new User({
             name,
             email,
             password: hashedPassword,
             username
-        }).save()
+        })
+        await newUser.save()
 
-        const token = jwt.sign(
-            { userId: newUser._id, email: newUser.email },
-            JWT_SECRET,
-            { expiresIn: JWT_EXPIRES_IN }
-        )
+        const accessToken = generateAccessToken(newUser)
+        const refreshToken = generateRefreshToken(newUser)
 
-        res.status(201).json({
-            status: 'success',
-            message: 'User registered successfully',
+        newUser.refreshToken = refreshToken;
+
+      
+        sendResponse(res, 201, 'User registered successfully', {
             user: {
                 id: newUser._id,
                 name: newUser.name,
                 email: newUser.email,
                 username: newUser.username,
             },
-            token
+            accessToken,
+            refreshToken,
         })
+
     } catch (error) {
         console.log('error', error);
         next(error);
@@ -90,23 +104,22 @@ export const signIn = async (req, res, next) => {
             error.status = 401;
             return next(error);
         }
+        const accessToken = generateAccessToken(user)
+        const refreshToken = generateRefreshToken(user)
 
-        const token = jwt.sign(
-            { userId: user._id, email: user.email },
-            JWT_SECRET,
-            { expiresIn: JWT_EXPIRES_IN }
-        )
+        user.refreshToken = refreshToken
+        await user.save()
 
-        res.status(200).json({
-            status: 'success',
-            message: 'User signed in successfully',
+
+        sendResponse(res, 200, 'User signed in successfully', {
             user: {
                 id: user._id,
                 name: user.name,
                 email: user.email,
                 username: user.username,
             },
-            token
+            accessToken,
+            refreshToken,
         })
     } catch (error) {
         console.log('error', error);
@@ -115,23 +128,47 @@ export const signIn = async (req, res, next) => {
 }
 
 
+export const refreshAccessToken = async (req, res, next) => {
+    try {
+        const { refreshToken } = req.body
+
+        if (!refreshToken) {
+            const error = new Error('Refresh token is required')
+            error.status = 400
+            return next(error)
+        }
+
+        const user = await User.findOne({ refreshToken })
+        if (!user) {
+            const error = new Error('Invalid refresh token')
+            error.status = 401
+            return next(error)
+        }
+
+        jwt.verify(refreshToken, REFRESH_TOKEN_SECRET, (err, decoded) => {
+            if (err) {
+                const error = new Error('Expired or invalid refresh token')
+                error.status = 401
+                return next(error)
+            }
+
+            const newAccessToken = generateAccessToken(user)
+            sendResponse(res, 200, 'Access token refreshed successfully', {
+                accessToken: newAccessToken,
+            })
+        })
+    } catch (error) {
+        next(error)
+    }
+}
+
 export const signOut = async (req, res, next) => {
     try {
-        const userId = req.user._id;
+        const userId = req.user._id
+        await User.findByIdAndUpdate(userId, { refreshToken: null })
 
-        res.clearCookie('token', {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            sameSite: "strict",
-        })
-
-        res.status(200).json({
-            status: 'success',
-            message: 'User signed out successfully please remove token from client side',
-            data: null
-        })
-
+        sendResponse(res, 200, 'User signed out successfully')
     } catch (error) {
-        next(error);
+        next(error)
     }
 }
