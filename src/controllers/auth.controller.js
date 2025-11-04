@@ -60,7 +60,6 @@ export const signUp = async (req, res, next) => {
 
         newUser.refreshToken = refreshToken;
 
-      
         sendResponse(res, 201, 'User registered successfully', {
             user: {
                 id: newUser._id,
