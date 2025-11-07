@@ -13,5 +13,5 @@ export const {
     EMAIL_PASSWORD,
     REFRESH_TOKEN_SECRET,
     REFRESH_TOKEN_EXPIRES_IN,
-
+    ARCJET_KEY
 } = process.env;

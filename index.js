@@ -19,7 +19,7 @@ import "./src/cron/resetHabits.js";
 
 
 import errorMiddleware from "./src/middlewares/error.middleware.js";
-
+import arcjetMiddleware from "./src/middlewares/arcjet.middleware.js";
 
 
 const app = express();
@@ -32,7 +32,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
 app.use(cors())
-
+app.use(arcjetMiddleware)
 
 
 // Routes
