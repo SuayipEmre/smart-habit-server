@@ -16,10 +16,12 @@ import statsRouter from "./src/routes/stats.route.js";
 
 import "./src/cron/reminder.cron.js";
 import "./src/cron/resetHabits.js";
-
+import "./src/jobs/dailyReminder.js";
 
 import errorMiddleware from "./src/middlewares/error.middleware.js";
 import arcjetMiddleware from "./src/middlewares/arcjet.middleware.js";
+import testRouter from "./src/routes/test.route.js";
+import userRoute from "./src/routes/user.route.js";
 
 
 const app = express();
@@ -39,6 +41,8 @@ app.use(arcjetMiddleware)
 app.use('/api/v1/auth', authRoutes);
 app.use('/api/v1/habit', habitRoutes);
 app.use('/api/v1/stats', statsRouter);
+app.use('/api/v1/tests', testRouter);
+app.use('/api/v1/user', userRoute);
 
 app.use(errorMiddleware)
 

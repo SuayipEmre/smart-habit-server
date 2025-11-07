@@ -45,8 +45,5 @@ temp/
 # TypeScript build artifacts (if using TS)
 *.tsbuildinfo
 
-# Optional lock files (if using only one package manager)
-# Uncomment the ones you don't use
-# yarn.lock
-# package-lock.json
-# pnpm-lock.yaml
+
+src/config/firebase-service-account.json
