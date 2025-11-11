@@ -15,6 +15,8 @@ This repository contains the **backend (server)** part of the project.
 - ⚙️ **sendResponse utility** for consistent API responses  
 - 🧱 **Modular structure** with routes, controllers, services, and middlewares  
 - 📦 **Environment-based config** using dotenv  
+- **Arcjet Security Integration** (Bot detection & Rate limiting & Shield protection (LIVE/DRY_RUN modes))
+- **Push Notification Support** (Expo Push Token update endpoint)
 
 ---
 
@@ -29,4 +31,6 @@ This repository contains the **backend (server)** part of the project.
 | **Nodemailer** | Email sending service |
 | **Node-Cron** | Task scheduling (habit resets, etc.) |
 | **dotenv** | Environment variable management |
+| **Arcjet**	Bot detection, rate limiting & security rules |
+| **Expo Push Notifications**	Push token management & mobile notifications|
 ---

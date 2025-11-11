@@ -50,6 +50,8 @@ app.get('/', (req, res) => {
     message : 'SmartHabit API is running 🚀'
   })
 })
+
+
 // Error Middleware
 app.use(errorMiddleware)
 

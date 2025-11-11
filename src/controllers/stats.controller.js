@@ -29,30 +29,25 @@ export const getStreakStats = async (req, res, next) => {
 
 export const getProgressStats = async (req, res, next) => {
   try {
-    const user = req.user; // giriş yapan kullanıcıyı al
-    const range = parseInt(req.query.range) || 7; // ?range=7 (varsayılan 7 gün)
+    const user = req.user; 
+    const range = parseInt(req.query.range) || 7;
 
-    // 1️⃣ Kullanıcının tüm habit’lerini çek
     const habits = await Habit.find({ user: user._id });
 
-    // Eğer hiç habit yoksa
     if (!habits.length) {
       sendResponse(res, 200, 'No habits found for this user', {
         progress: []
       })
     }
 
-    // 2️⃣ Bugünden geriye range kadar gün oluştur
     const today = new Date();
     const progress = [];
 
     for (let i = range - 1; i >= 0; i--) {
-      // i gün önceki tarihi bul
       const date = new Date();
       date.setDate(today.getDate() - i);
       const dateStr = date.toISOString().split('T')[0]; // UTC string
 
-      // 3️⃣ O gün kaç habit tamamlanmış?
       let completedCount = 0;
 
       habits.forEach((habit) => {
@@ -62,7 +57,6 @@ export const getProgressStats = async (req, res, next) => {
         if (hasCompleted) completedCount++;
       });
 
-      // 4️⃣ Sonuca ekle
       progress.push({
         date: dateStr,
         day: date.toLocaleDateString('en-US', { weekday: 'short' }),
