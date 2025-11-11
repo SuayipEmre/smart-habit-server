@@ -19,7 +19,7 @@ const generateRefreshToken = (user) =>
 
 export const signUp = async (req, res, next) => {
     const { name, email, password, username } = req.body
-
+    console.log('istek atıldı', req.body);
 
     try {
         if (!name || !email || !password || !username) {
@@ -81,6 +81,7 @@ export const signUp = async (req, res, next) => {
 export const signIn = async (req, res, next) => {
     try {
         const { email, password } = req.body;
+        console.log('istek atıldı', req.body);
 
         if (!email || !password) {
             const error = new Error('All fields are required');

@@ -37,6 +37,6 @@ cron.schedule(
     }
   },
   {
-    timezone: "Europe/Istanbul", // Ensures it runs at 12:00 PM Istanbul time
+    timezone: "Europe/Istanbul",
   }
 );
